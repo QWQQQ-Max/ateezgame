@@ -8,9 +8,6 @@ interface ChatScreenProps {
   onRestart: () => void;
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
 export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -49,15 +46,19 @@ export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
 
   const callAPI = async (msgs: Message[]) => {
     const systemPrompt = buildSystemPrompt(setup);
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/deepseek-chat`, {
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
       },
       body: JSON.stringify({
-        systemPrompt,
-        messages: msgs,
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...msgs.map(m => ({ role: m.role, content: m.content })),
+        ],
+        stream: false,
       }),
     });
 
@@ -67,7 +68,7 @@ export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
     }
 
     const data = await response.json();
-    return data.content as string;
+    return data.choices[0].message.content as string;
   };
 
   const startGame = async () => {
