@@ -29,13 +29,15 @@ export default function SetupScreen({ onComplete, onBack }: SetupScreenProps) {
   const [customRole, setCustomRole] = useState('');
   const [playerName, setPlayerName] = useState('');
 
+  // ── 单选：点击直接选中，再次点击取消 ──────────────────────────
   const toggleMember = (id: string) => {
     setSelectedMembers((prev) =>
-      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
+      prev.includes(id) ? [] : [id]
     );
   };
+  // ─────────────────────────────────────────────────────────────
 
-  const canProceedMembers = selectedMembers.length > 0;
+  const canProceedMembers = selectedMembers.length === 1;
   const canProceedRole = selectedRole !== null && (selectedRole !== 'custom' || customRole.trim());
   const canProceedName = playerName.trim().length > 0;
 
@@ -86,7 +88,7 @@ export default function SetupScreen({ onComplete, onBack }: SetupScreenProps) {
           <div className="space-y-6">
             <div>
               <h2 className="text-white text-xl font-light tracking-wide">选择攻略对象</h2>
-              <p className="text-zinc-500 text-sm mt-1">可选择单人或多人同时攻略</p>
+              <p className="text-zinc-500 text-sm mt-1">选择你的攻略对象</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {MEMBERS.map((member) => {

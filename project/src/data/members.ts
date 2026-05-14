@@ -10,7 +10,7 @@ export const MEMBERS: Member[] = [
     stability: 2,
     description: '全能队长，灵魂制作人。工作狂，高情商，猫系气质。',
     keywords: ['爹系', '控制狂', '工作狂', '傲娇', '颜控'],
-    color: '#C0392B',
+    color: '#c0692b',
   },
   {
     id: 'seonghwa',
@@ -21,7 +21,7 @@ export const MEMBERS: Member[] = [
     stability: 2,
     description: '完美精致的"星太太"，温柔妈妈担当。高敏感体，感情中极度被动。',
     keywords: ['钓系', '高敏感', '被动', '需要安全感', '他的爱很重'],
-    color: '#2980B9',
+    color: '#ffcfda',
   },
   {
     id: 'yunho',
@@ -32,7 +32,7 @@ export const MEMBERS: Member[] = [
     stability: 1,
     description: '阳光开朗大狗狗，99line队长。温柔绿茶与情绪价值大师。',
     keywords: ['中央空调', '情绪价值', '青梅竹马', '好感易得真心难求'],
-    color: '#27AE60',
+    color: '#efc186',
   },
   {
     id: 'yeosang',
@@ -43,7 +43,7 @@ export const MEMBERS: Member[] = [
     stability: 5,
     description: '清冷漫撕男，呆萌话少。感情洁癖者，追求纯粹平等关系。',
     keywords: ['直球', '感情洁癖', '团宠', '反差萌', '不双标'],
-    color: '#8E44AD',
+    color: '#fffbf3',
   },
   {
     id: 'san',
@@ -54,7 +54,7 @@ export const MEMBERS: Member[] = [
     stability: 5,
     description: '舞台上的"人间撒旦"，私下的甜酒窝小猫。内心敏感体贴。',
     keywords: ['猫系', '闷骚', '情绪黑洞', '你需要主动', '被动承受'],
-    color: '#E67E22',
+    color: '#562cc3',
   },
   {
     id: 'mingi',
@@ -65,7 +65,7 @@ export const MEMBERS: Member[] = [
     stability: 4,
     description: '狼系低音炮，自恋公主。纯情狼公主，对感情要当"特殊的那一个"。',
     keywords: ['直男', '纯情', '占有欲', '你需要哄他', '特殊感'],
-    color: '#16A085',
+    color: '#162da0',
   },
   {
     id: 'wooyoung',
@@ -76,7 +76,7 @@ export const MEMBERS: Member[] = [
     stability: 2,
     description: '吉娃娃，气氛制造机。外强中干，内核极度缺乏安全感。',
     keywords: ['纸老虎', '渣男气质', '行动力', '独占欲', '反强制爱'],
-    color: '#D35400',
+    color: '#0b0a0a',
   },
   {
     id: 'jongho',
@@ -87,7 +87,7 @@ export const MEMBERS: Member[] = [
     stability: 2,
     description: '全能忙内，力量型主唱。拧巴的逃避型依恋，渴望被爱但会把人推开。',
     keywords: ['自卑感', '拧巴', '实干家', '你需要给他台阶', '反卖腐'],
-    color: '#2C3E50',
+    color: '#503e2c',
   },
 ];
 

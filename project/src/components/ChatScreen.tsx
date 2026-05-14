@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, RotateCcw, ChevronDown } from 'lucide-react';
 import { PlayerSetup, Message } from '../types';
-import { buildSystemPrompt } from '../data/systemPrompt';
+import { buildSystemPrompt, buildStateTag } from '../data/systemPrompt';
 
 interface ChatScreenProps {
   setup: PlayerSetup;
@@ -13,6 +13,12 @@ export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
+
+  // ── 硬锁状态：周数 & 本周事件计数 ──────────────────────────────
+  const [currentWeek, setCurrentWeek] = useState(1);
+  const [eventsThisWeek, setEventsThisWeek] = useState(0);
+  // ─────────────────────────────────────────────────────────────
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -44,8 +50,41 @@ export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
     }
   }, []);
 
-  const callAPI = async (msgs: Message[]) => {
+  // ── 解析 AI 回复，更新周数/事件计数 ──────────────────────────
+  const updateWeekState = (reply: string) => {
+    const isWeekEnd = reply.includes('周结束');
+    const hasEvent = reply.includes('【') && reply.includes('】');
+
+    if (isWeekEnd) {
+      // AI 自动推进到下一周并生成了第1个事件
+      setCurrentWeek(prev => prev + 1);
+      setEventsThisWeek(1);
+    } else if (hasEvent) {
+      setEventsThisWeek(prev => prev + 1);
+    }
+  };
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * 发送给 API 时，在最后一条 user 消息内容前注入状态标签。
+   * 注意：这只影响发给模型的内容，聊天界面显示的是原始文本。
+   */
+  const callAPI = async (
+    msgs: Message[],
+    week: number,
+    events: number,
+  ) => {
     const systemPrompt = buildSystemPrompt(setup);
+    const stateTag = buildStateTag(week, events);
+
+    // 把状态标签注入最后一条 user 消息（不修改原 messages state）
+    const apiMessages = msgs.map((m, idx) => {
+      if (idx === msgs.length - 1 && m.role === 'user') {
+        return { role: m.role, content: stateTag + m.content };
+      }
+      return { role: m.role, content: m.content };
+    });
+
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -56,7 +95,7 @@ export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
         model: 'deepseek-chat',
         messages: [
           { role: 'system', content: systemPrompt },
-          ...msgs.map(m => ({ role: m.role, content: m.content })),
+          ...apiMessages,
         ],
         stream: false,
       }),
@@ -78,8 +117,11 @@ export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
         role: 'user',
         content: '开始游戏',
       };
-      const reply = await callAPI([initMsg]);
+      // 初始：第1周，已发生0个事件
+      const reply = await callAPI([initMsg], 1, 0);
       setMessages([{ role: 'assistant', content: reply }]);
+      // 开局 AI 必然生成第1个事件，计数+1
+      updateWeekState(reply);
     } catch {
       setMessages([{
         role: 'assistant',
@@ -105,8 +147,11 @@ export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
     }
 
     try {
-      const reply = await callAPI(newMessages);
+      // 把当前周数/事件计数传入，由 callAPI 注入状态标签
+      const reply = await callAPI(newMessages, currentWeek, eventsThisWeek);
       setMessages([...newMessages, { role: 'assistant', content: reply }]);
+      // 根据回复内容更新计数
+      updateWeekState(reply);
     } catch {
       setMessages([...newMessages, {
         role: 'assistant',
@@ -132,7 +177,16 @@ export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
 
   const formatContent = (content: string) => {
     return content.split('\n').map((line, i) => {
-      const isPanel = line.startsWith('男主好感度') || line.startsWith('第') || line.startsWith('玩家属性') || line.startsWith('当前') || line.startsWith('人气值') || line.startsWith('心情值') || line.startsWith('金钱') || line.startsWith('事业压力');
+      const isPanel =
+        line.startsWith('男主好感度') ||
+        line.startsWith('第') ||
+        line.startsWith('玩家属性') ||
+        line.startsWith('当前') ||
+        line.startsWith('人气值') ||
+        line.startsWith('心情值') ||
+        line.startsWith('金钱') ||
+        line.startsWith('事业压力') ||
+        line.startsWith('=== 第');   // 周结束标题也用面板样式
       const isEventTitle = line.startsWith('【') && line.endsWith('】');
       const isOption = /^[ABCD]\./.test(line.trim()) || /^[ABCD]、/.test(line.trim());
       const isHeader = line.startsWith('##') || line.startsWith('**');
@@ -174,6 +228,8 @@ export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
             <div className="text-white text-sm font-light tracking-wide">ATEEZ 恋爱指南</div>
             <div className="text-zinc-500 text-xs">
               {setup.year} 年 · {setup.playerName}
+              {/* 调试用：显示当前周数和事件计数，上线前可删除 */}
+              <span className="ml-2 text-zinc-700">W{currentWeek} E{eventsThisWeek}/3</span>
             </div>
           </div>
         </div>
