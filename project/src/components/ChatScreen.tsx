@@ -85,14 +85,14 @@ export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
       return { role: m.role, content: m.content };
     });
 
-const response = await fetch('https://ai.xiaoye.io/v1/chat/completions', {
+const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+    Authorization: `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
   },
   body: JSON.stringify({
-    model: 'claude-sonnet-4-6',
+    model: 'deepseek-v4-pro',
         messages: [
           { role: 'system', content: systemPrompt },
           ...apiMessages,
