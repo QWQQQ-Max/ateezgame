@@ -92,7 +92,7 @@ const response = await fetch('https://ai.xiaoye.io/v1/chat/completions', {
     Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
   },
   body: JSON.stringify({
-    model: 'claude-opus-4-6',
+    model: 'claude-sonnet-4-6',
         messages: [
           { role: 'system', content: systemPrompt },
           ...apiMessages,
