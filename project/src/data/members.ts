@@ -9,7 +9,7 @@ export const MEMBERS: Member[] = [
     cohabDifficulty: 5,
     stability: 2,
     description: '全能队长，灵魂制作人。工作狂，高情商，猫系气质。',
-    keywords: ['爹系', '控制狂', '工作狂', '傲娇', '颜控'],
+    keywords: ['爹系', '控制狂', '工作狂', '傲娇', '高情商'],
     color: '#c0692b',
   },
   {
@@ -31,7 +31,7 @@ export const MEMBERS: Member[] = [
     cohabDifficulty: 5,
     stability: 1,
     description: '阳光开朗大狗狗，99line队长。温柔绿茶与情绪价值大师。',
-    keywords: ['中央空调', '情绪价值', '青梅竹马', '好感易得真心难求'],
+    keywords: ['中央空调', '情绪价值', '男友感', '好感易得真心难求'],
     color: '#efc186',
   },
   {
