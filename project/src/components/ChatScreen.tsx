@@ -130,7 +130,7 @@ D. 自由行动`;
         Authorization: `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'deepseek-v4-pro',
+        model: 'deepseek-v4-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           ...apiMessages,
