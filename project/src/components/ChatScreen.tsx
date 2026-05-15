@@ -14,10 +14,10 @@ export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
 
-  // ── 硬锁状态：周数 & 本周事件计数 ──────────────────────────────
+  // 周数与事件控制
   const [currentWeek, setCurrentWeek] = useState(1);
   const [eventsThisWeek, setEventsThisWeek] = useState(0);
-  // ─────────────────────────────────────────────────────────────
+  const [isEnded, setIsEnded] = useState(false);   // 结局标记
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -50,49 +50,35 @@ export default function ChatScreen({ setup, onRestart }: ChatScreenProps) {
     }
   }, []);
 
-  // ── 解析 AI 回复，更新周数/事件计数 ──────────────────────────
-  const updateWeekState = (reply: string) => {
-    const isWeekEnd = reply.includes('周结束');
-    const hasEvent = reply.includes('【') && reply.includes('】');
-
-    if (isWeekEnd) {
-      // AI 自动推进到下一周并生成了第1个事件
-      setCurrentWeek(prev => prev + 1);
-      setEventsThisWeek(1);
-    } else if (hasEvent) {
-      setEventsThisWeek(prev => prev + 1);
-    }
-  };
-  // ─────────────────────────────────────────────────────────────
-
-  /**
-   * 发送给 API 时，在最后一条 user 消息内容前注入状态标签。
-   * 注意：这只影响发给模型的内容，聊天界面显示的是原始文本。
-   */
-  const callAPI = async (
-    msgs: Message[],
-    week: number,
-    events: number,
-  ) => {
+  const callAPI = async (msgs: Message[], week: number, events: number) => {
     const systemPrompt = buildSystemPrompt(setup);
     const stateTag = buildStateTag(week, events);
 
-    // 把状态标签注入最后一条 user 消息（不修改原 messages state）
     const apiMessages = msgs.map((m, idx) => {
       if (idx === msgs.length - 1 && m.role === 'user') {
-        return { role: m.role, content: stateTag + m.content };
+        let finalContent = stateTag + m.content;
+
+        if (isEnded || week >= 15) {
+          // 结局后宽松模式
+          finalContent += `\n\n[SYSTEM_NOTE]: 故事已进入结局阶段。你可以根据玩家意愿，自由续写后日谈、日常生活、感触或番外，不需要生成新周面板或事件，保持角色性格一致即可。`;
+        } else if (events >= 3) {
+          // 正常切周
+          finalContent += `\n\n[SYSTEM_OVERRIDE_LOCK]: 检测到本周事件已达3个上限！你必须在本次回复中强制结束本周！绝对禁止继续当前闲聊！请立即输出“=== 第 ${week} 周结束 ===”并结算面板，然后直接生成第 ${week + 1} 周的新面板和第1个事件！`;
+        }
+
+        return { role: m.role, content: finalContent };
       }
       return { role: m.role, content: m.content };
     });
 
-const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
-  },
-  body: JSON.stringify({
-    model: 'deepseek-v4-flash',
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-pro',
         messages: [
           { role: 'system', content: systemPrompt },
           ...apiMessages,
@@ -113,20 +99,12 @@ const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
   const startGame = async () => {
     setIsLoading(true);
     try {
-      const initMsg: Message = {
-        role: 'user',
-        content: '开始游戏',
-      };
-      // 初始：第1周，已发生0个事件
+      const initMsg: Message = { role: 'user', content: '开始游戏' };
       const reply = await callAPI([initMsg], 1, 0);
       setMessages([{ role: 'assistant', content: reply }]);
-      // 开局 AI 必然生成第1个事件，计数+1
-      updateWeekState(reply);
+      setEventsThisWeek(1);
     } catch {
-      setMessages([{
-        role: 'assistant',
-        content: '连接失败，请稍后重试。',
-      }]);
+      setMessages([{ role: 'assistant', content: '连接失败，请检查网络或 API 密钥配置。' }]);
     } finally {
       setIsLoading(false);
     }
@@ -147,16 +125,37 @@ const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
     }
 
     try {
-      // 把当前周数/事件计数传入，由 callAPI 注入状态标签
-      const reply = await callAPI(newMessages, currentWeek, eventsThisWeek);
+      const currentW = currentWeek;
+      const currentE = eventsThisWeek;
+
+      const reply = await callAPI(newMessages, currentW, currentE);
       setMessages([...newMessages, { role: 'assistant', content: reply }]);
-      // 根据回复内容更新计数
-      updateWeekState(reply);
+
+      // 结局检测
+      const hasEnding = reply.includes('结局') ||
+                       reply.includes('HE') ||
+                       reply.includes('OE') ||
+                       reply.includes('BE') ||
+                       reply.includes('SE') ||
+                       reply.includes('大结局');
+
+      if (hasEnding || currentW >= 15) {
+        setIsEnded(true);
+        // 结局后锁定周数为15
+        setCurrentWeek(15);
+      } else if (!isEnded) {
+        const isWeekEnd = reply.includes('周结束') || reply.includes('结算');
+        const hasEvent = reply.includes('【') && reply.includes('】');
+
+        if (currentE >= 3 || isWeekEnd) {
+          setCurrentWeek(prev => prev + 1);
+          setEventsThisWeek(1);
+        } else if (hasEvent) {
+          setEventsThisWeek(prev => prev + 1);
+        }
+      }
     } catch {
-      setMessages([...newMessages, {
-        role: 'assistant',
-        content: '⚠ 请求失败，请重试。',
-      }]);
+      setMessages([...newMessages, { role: 'assistant', content: '⚠ 请求失败，请重试。' }]);
     } finally {
       setIsLoading(false);
     }
@@ -177,39 +176,31 @@ const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
 
   const formatContent = (content: string) => {
     return content.split('\n').map((line, i) => {
-      const isPanel =
-        line.startsWith('男主好感度') ||
-        line.startsWith('第') ||
-        line.startsWith('玩家属性') ||
-        line.startsWith('当前') ||
-        line.startsWith('人气值') ||
-        line.startsWith('心情值') ||
-        line.startsWith('金钱') ||
-        line.startsWith('事业压力') ||
-        line.startsWith('=== 第');   // 周结束标题也用面板样式
+      const isPanel = line.startsWith('男主好感度') ||
+                     line.startsWith('第') ||
+                     line.startsWith('玩家属性') ||
+                     line.startsWith('当前') ||
+                     line.startsWith('人气值') ||
+                     line.startsWith('心情值') ||
+                     line.startsWith('金钱') ||
+                     line.startsWith('事业压力') ||
+                     line.startsWith('=== 第');
+
       const isEventTitle = line.startsWith('【') && line.endsWith('】');
-      const isOption = /^[ABCD]\./.test(line.trim()) || /^[ABCD]、/.test(line.trim());
+      const isOption = /^[ABCD][.、]/.test(line.trim());
       const isHeader = line.startsWith('##') || line.startsWith('**');
 
       if (isEventTitle) {
-        return (
-          <div key={i} className="text-rose-400 font-medium mt-4 mb-2">{line}</div>
-        );
+        return <div key={i} className="text-rose-400 font-medium mt-4 mb-2">{line}</div>;
       }
       if (isOption) {
-        return (
-          <div key={i} className="ml-4 py-0.5 text-zinc-300 hover:text-white cursor-default">{line}</div>
-        );
+        return <div key={i} className="ml-4 py-0.5 text-zinc-300 hover:text-white cursor-default">{line}</div>;
       }
       if (isPanel) {
-        return (
-          <div key={i} className="text-zinc-400 font-mono text-xs py-0.5">{line}</div>
-        );
+        return <div key={i} className="text-zinc-400 font-mono text-xs py-0.5">{line}</div>;
       }
       if (isHeader) {
-        return (
-          <div key={i} className="text-white font-medium mt-2">{line.replace(/\*\*/g, '')}</div>
-        );
+        return <div key={i} className="text-white font-medium mt-2">{line.replace(/\*\*/g, '')}</div>;
       }
       if (line === '') {
         return <div key={i} className="h-2" />;
@@ -228,7 +219,6 @@ const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
             <div className="text-white text-sm font-light tracking-wide">ATEEZ 恋爱指南</div>
             <div className="text-zinc-500 text-xs">
               {setup.year} 年 · {setup.playerName}
-              {/* 调试用：显示当前周数和事件计数，上线前可删除 */}
               <span className="ml-2 text-zinc-700">W{currentWeek} E{eventsThisWeek}/3</span>
             </div>
           </div>
@@ -242,7 +232,7 @@ const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
         </button>
       </div>
 
-      {/* Messages */}
+      {/* Messages Area */}
       <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto px-4 py-6 space-y-6"
@@ -303,7 +293,7 @@ const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Scroll to bottom button */}
+      {/* Scroll Button */}
       {showScrollBtn && (
         <button
           onClick={scrollToBottom}
@@ -313,7 +303,7 @@ const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
         </button>
       )}
 
-      {/* Input */}
+      {/* Input Area */}
       <div className="border-t border-zinc-800 px-4 py-3 bg-zinc-900/50 backdrop-blur shrink-0">
         <div className="max-w-4xl mx-auto flex gap-3 items-end">
           <div className="flex-1 bg-zinc-900 border border-zinc-700 rounded-sm focus-within:border-rose-400/50 transition-colors">
