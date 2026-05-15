@@ -6,8 +6,8 @@ interface WelcomeScreenProps {
 
 export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4">
-      <div className="max-w-2xl w-full text-center space-y-10">
+    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 py-8">
+      <div className="max-w-2xl w-full text-center space-y-8">
         {/* Logo area */}
         <div className="flex items-center justify-center gap-3">
           <div className="w-px h-10 bg-gradient-to-b from-transparent via-rose-400 to-transparent" />
@@ -54,6 +54,15 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* 开源公告区 */}
+        <div className="border border-zinc-800/60 rounded-sm p-4 bg-zinc-900/40 text-left text-xs text-zinc-400 leading-relaxed space-y-1">
+          <p>本关键代码段已开源，由于本人金币告急所以只能换成便宜api代理，可能会更傻一点，有需要请下载文件自行使用：通过百度网盘分享的文件：ATEEZ 版嫂…</p>
+          <p>
+            链接:<a href="https://pan.baidu.com/s/1mOsTRd3_gJ1PyGUxT0X7Xw?pwd=btl2" target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:text-rose-300 transition-colors break-all ml-1">https://pan.baidu.com/s/1mOsTRd3_gJ1PyGUxT0X7Xw?pwd=btl2</a>
+          </p>
+          <p>复制这段内容打开「百度网盘APP 即可获取」</p>
         </div>
 
         {/* CTA */}

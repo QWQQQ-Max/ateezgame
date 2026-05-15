@@ -92,7 +92,7 @@ const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
     Authorization: `Bearer ${import.meta.env.VITE_DEEPSEEK_API_KEY}`,
   },
   body: JSON.stringify({
-    model: 'deepseek-v4-pro',
+    model: 'deepseek-v4-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           ...apiMessages,
