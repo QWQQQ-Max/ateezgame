@@ -32,13 +32,13 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           <div className="flex gap-3 items-start">
             <Sparkles className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" />
             <p className="text-zinc-300 text-sm leading-relaxed">
-              在本游戏中，你将扮演一名闯入 K-POP 世界的普通人，与 ATEEZ 的某位成员相遇，并在 2018 至 2026 年的时间长河中，共同面对现实、事业、舆论与情感的考验。
+              本关键代码段已开源，本人金币告急被迫停服，约5.17日
             </p>
           </div>
           <div className="flex gap-3 items-start">
             <Sparkles className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" />
             <p className="text-zinc-300 text-sm leading-relaxed">
-              没有天选剧本，每个选择都将真实导向甜蜜、遗憾、成长或分离。
+              下载代码后若有心做同样的网站则代码拆一下，固定模板输出段，以防止遗忘上下文导致dm错乱回复如不输出属性面板、选项等。
             </p>
           </div>
 
@@ -58,7 +58,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
         {/* 开源公告区 */}
         <div className="border border-zinc-800/60 rounded-sm p-4 bg-zinc-900/40 text-left text-xs text-zinc-400 leading-relaxed space-y-1">
-          <p>本关键代码段已开源，由于本人金币告急所以只能换成便宜api代理，可能会更傻一点，有需要请下载文件自行使用：通过百度网盘分享的文件：ATEEZ 版嫂…</p>
+          <p>有需要请下载文件自行使用：通过百度网盘分享的文件：ATEEZ 版嫂…</p>
           <p>
             链接:<a href="https://pan.baidu.com/s/1mOsTRd3_gJ1PyGUxT0X7Xw?pwd=btl2" target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:text-rose-300 transition-colors break-all ml-1">https://pan.baidu.com/s/1mOsTRd3_gJ1PyGUxT0X7Xw?pwd=btl2</a>
           </p>
@@ -75,7 +75,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         </button>
 
         <p className="text-zinc-600 text-xs">
-          由 AI 驱动 · 每次游玩体验独一无二
+          跑路状态ing
         </p>
       </div>
     </div>
